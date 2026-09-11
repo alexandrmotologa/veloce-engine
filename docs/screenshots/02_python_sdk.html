@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>python example_trading_bot.py</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0a0e17;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #c8d8e8;
+  min-height: 100vh;
+  padding: 0;
+}
+.terminal {
+  background: #0a0e17;
+  padding: 18px 22px 24px;
+  min-width: 900px;
+  max-width: 980px;
+}
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #12192a;
+  border-radius: 10px 10px 0 0;
+  padding: 10px 16px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #1e2d40;
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #28c840; }
+.title-bar span { color: #607080; font-size: 12px; margin-left: 8px; }
+.body {
+  background: #0d1220;
+  border-radius: 0 0 10px 10px;
+  padding: 18px 20px 20px;
+  border: 1px solid #1a2538;
+  border-top: none;
+}
+.c  { color: #00e5ff; }  /* cyan  */
+.g  { color: #22c55e; }  /* green */
+.r  { color: #f87171; }  /* red   */
+.y  { color: #fbbf24; }  /* amber */
+.w  { color: #e2e8f0; }  /* white */
+.d  { color: #64748b; }  /* dim   */
+.b  { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="title-bar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <span>python example_trading_bot.py</span>
+  </div>
+  <div class="body">
+<pre><span class="c b">VeloceEngine Python SDK — Algorithmic Market-Making Bot</span>
+<span class="d">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="d">$ python example_trading_bot.py --host 127.0.0.1 --tcp-port 9881 --http-port 8080</span>
+
+<span class="g">✓ Connected to VeloceEngine NIO TCP gateway at 127.0.0.1:9881</span>
+<span class="g">✓ WebGateway HTTP/SSE connected at http://127.0.0.1:8080</span>
+
+<span class="y b">  Fetching initial order book snapshot...</span>
+  Best Bid : <span class="g">$150.2800</span>  (5,200 shares)
+  Best Ask : <span class="r">$150.3200</span>  (4,700 shares)
+  Spread   : <span class="w">$0.0400</span>
+  Mid Price: <span class="c">$150.3000</span>
+
+<span class="y b">  Market-making loop started. Target spread: $0.08 | Order size: 50 shares</span>
+<span class="d">  ─────────────────────────────────────────────────────────────────</span>
+  Cycle   1 → <span class="g">BUY  LIMIT</span>  50 @ <span class="g">$150.2600</span>  [order_id=5001]  → <span class="g">ACCEPTED</span>
+  Cycle   1 → <span class="r">SELL LIMIT</span>  50 @ <span class="r">$150.3400</span>  [order_id=5002]  → <span class="r">ACCEPTED</span>
+  Cycle   2 → <span class="g">BUY  LIMIT</span>  50 @ <span class="g">$150.2600</span>  [order_id=5003]  → <span class="g">ACCEPTED</span>
+  Cycle   2 → <span class="r">SELL LIMIT</span>  50 @ <span class="r">$150.3400</span>  [order_id=5004]  → <span class="r">ACCEPTED</span>
+  Cycle   3 → Cancel #5001  → <span class="y">CANCELLED</span>  (stale quote)
+  Cycle   3 → <span class="g">BUY  LIMIT</span>  50 @ <span class="g">$150.2550</span>  [order_id=5005]  → <span class="g">ACCEPTED</span>
+
+<span class="y b">  Trade Execution received via SSE:</span>
+  ► Trade #10,042 | TAKER=BID | 50 shares @ <span class="g b">$150.3200</span>  P&amp;L=+<span class="g b">$1.88</span>
+  ► Trade #10,043 | TAKER=ASK | 50 shares @ <span class="g b">$150.2600</span>  P&amp;L=+<span class="g b">$0.62</span>
+
+<span class="d">  ─────────────────────────────────────────────────────────────────</span>
+  Orders submitted : <span class="w b">   128</span>
+  Orders filled    : <span class="w b">    94</span>
+  Orders cancelled : <span class="w b">    34</span>
+  Realized P&amp;L     : <span class="g b">+$148.32</span>
+  Round-trip avg   : <span class="c b"> 31 µs</span>  (TCP → match → SSE event)
+<span class="d">  ─────────────────────────────────────────────────────────────────</span>
+<span class="g">✓ Bot running. Press Ctrl+C to stop.</span></pre>
+  </div>
+</div>
+</body>
+</html>

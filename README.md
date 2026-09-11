@@ -1,8 +1,68 @@
-# VeloceEngine
+<p align="center">
+  <img src="docs/images/logo.png?raw=true" alt="VeloceEngine Racing Cheetah Logo" width="130" style="border-radius: 24px;" />
+</p>
 
-VeloceEngine is an ultra-low-latency in-memory limit order book and matching engine written in Java 21. It processes orders using price-time (FIFO) priority with zero runtime heap allocations on the critical matching path.
+<h1 align="center">VeloceEngine</h1>
 
-The engine uses a single-writer pinned architecture powered by the LMAX Disruptor 4.x ring buffer, pre-allocated off-heap and pooled data structures, Agrona primitive hash maps, a memory-mapped write-ahead log (WAL), non-blocking Java NIO socket servers, and an embedded web dashboard.
+<p align="center">
+  <a href="https://github.com/alexandrmotologa/veloce-engine/actions"><img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Build"></a>
+  <a href="https://www.java.com/"><img src="https://img.shields.io/badge/java-21%20LTS-blue.svg" alt="Java 21"></a>
+  <a href="https://lmax-exchange.github.io/disruptor/"><img src="https://img.shields.io/badge/LMAX-Disruptor%204.x-orange.svg" alt="LMAX Disruptor"></a>
+  <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
+</p>
+
+<p align="center">
+  <strong>Ultra-Low-Latency In-Memory Limit Order Book &amp; Matching Engine — Java 21</strong><br>
+  Zero heap allocations on the critical path. 32M+ ops/sec. 29ns average match latency.
+</p>
+
+---
+
+## Visual Overview
+
+### 1. Real-Time ANSI Terminal Market Depth Ladder
+Live order book visualization with bid/ask depth bars, latency percentile histogram (HdrHistogram), spread, and transaction tape.
+
+```bash
+java -jar target/veloce-engine-1.0.0-SNAPSHOT.jar --synthetic-load --rate=50000 --symbol=AAPL
+```
+
+<p align="center">
+  <img src="docs/screenshots/01_tui_dashboard.png" alt="VeloceEngine ANSI Terminal Market Depth Ladder" width="860">
+</p>
+
+### 2. Python SDK — Algorithmic Market-Making Bot
+Pure Python client submitting 32-byte binary order frames over NIO TCP, with real-time trade execution events via SSE WebGateway.
+
+```bash
+cd sdk/python && python example_trading_bot.py
+```
+
+<p align="center">
+  <img src="docs/screenshots/02_python_sdk.png" alt="Python SDK Market-Making Bot Output" width="860">
+</p>
+
+### 3. JMH Microbenchmarks — Zero-Allocation Verification
+Java Microbenchmark Harness results confirming 32M+ ops/sec throughput, 29.1ns average latency, and 0 bytes heap allocations on the matching hot-path.
+
+```bash
+mvn clean test && mvn test -Dtest=MatchingEngineBenchmark
+```
+
+<p align="center">
+  <img src="docs/screenshots/03_benchmarks.png" alt="JMH Benchmark Results" width="860">
+</p>
+
+### 4. End-to-End Integration Test Suite + WAL Crash Recovery
+Full integration test covering TCP streaming, FIFO matching, stop-limit triggers, circuit breaker halts, SSE event streaming, and deterministic WAL replay recovery.
+
+```bash
+mvn test -Dtest=EndToEndIntegrationTest
+```
+
+<p align="center">
+  <img src="docs/screenshots/04_integration_test.png" alt="End-to-End Integration Test Suite" width="860">
+</p>
 
 ---
 

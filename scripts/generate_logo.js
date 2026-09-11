@@ -1,0 +1,289 @@
+/**
+ * VeloceEngine — Mascot Logo v4: Simplified High-Contrast Cheetah
+ *
+ * Strategy: Large clear geometric facets with dramatic lighting contrast.
+ * The cheetah is an UPWARD-FACING 3/4 frontal view, slightly looking up,
+ * similar to the style proven in Sentinel (Doberman) which works well.
+ * Key improvements over v1/v2:
+ *  - Much higher contrast between skull facets
+ *  - Muzzle is pale silver-slate (#7b92a8) — clearly distinct from dark skull
+ *  - Malar stripes are broader amber-gold for visibility against dark face
+ *  - Eyes are even larger with more prominent amber
+ *  - Ears are clearly pointed cat ears, well separated, prominent
+ */
+
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const NODE_MODULES = path.resolve(__dirname, '..', '..', '..', 'node_modules');
+const Resvg = (() => {
+  try {
+    return require(path.join(NODE_MODULES, '@resvg', 'resvg-js')).Resvg;
+  } catch {
+    return require('@resvg/resvg-js').Resvg;
+  }
+})();
+
+function buildLogoSvg() {
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <clipPath id="sq"><rect x="24" y="24" width="976" height="976" rx="220"/></clipPath>
+
+    <linearGradient id="g-skull" x1="30%" y1="0%" x2="70%" y2="100%">
+      <stop offset="0%" stop-color="#3d5a73"/>
+      <stop offset="100%" stop-color="#0d1929"/>
+    </linearGradient>
+    <linearGradient id="g-left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0e1a28"/>
+      <stop offset="100%" stop-color="#070e18"/>
+    </linearGradient>
+    <linearGradient id="g-right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4a6e8a"/>
+      <stop offset="100%" stop-color="#1e3548"/>
+    </linearGradient>
+    <linearGradient id="g-muzzle" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6b8fa8"/>
+      <stop offset="100%" stop-color="#3d586e"/>
+    </linearGradient>
+    <linearGradient id="g-neck" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e3245"/>
+      <stop offset="100%" stop-color="#0a1520"/>
+    </linearGradient>
+    <radialGradient id="g-eye" cx="35%" cy="32%" r="55%">
+      <stop offset="0%" stop-color="#fff8e7"/>
+      <stop offset="45%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#78350f"/>
+    </radialGradient>
+    <linearGradient id="g-cyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00f5ff"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+    <filter id="shadow" x="-12%" y="-10%" width="124%" height="130%">
+      <feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <!-- White squircle -->
+  <rect x="24" y="24" width="976" height="976" rx="220" fill="#fff" stroke="#e2e8f0" stroke-width="6"/>
+
+  <g clip-path="url(#sq)">
+    <g transform="translate(512,510)" filter="url(#shadow)">
+
+      <!-- Hex frame -->
+      <polygon points="0,-385 333,-192 333,192 0,385 -333,192 -333,-192"
+               fill="none" stroke="#0f172a" stroke-width="42" stroke-linejoin="round"/>
+      <polygon points="0,-348 302,-174 302,174 0,348 -302,174 -302,-174"
+               fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.38" stroke-dasharray="18,12"/>
+
+      <!-- ═══════════════════════════════════════════════
+           CHEETAH HEAD — simplified high-contrast low-poly
+           Wide across cheeks (zygomatic arch), narrow pointed ears,
+           broad pale muzzle section, large eyes above the nose line.
+           Uses LARGE FLAT FACETS for clarity.
+           ═══════════════════════════════════════════════ -->
+
+      <!-- BASE: full head + neck silhouette -->
+      <path d="
+        M   0,-270  L  95,-258  L 185,-225  L 225,-175
+        L 230,-120  L 215, -65  L 200,   0  L 205,  50
+        L 215,  95  L 210, 135  L 190, 170  L 155, 200
+        L 110, 225  L  55, 240  L   0, 244
+        L -55, 240  L-110, 225  L-155, 200  L-190, 170
+        L-210, 135  L-215,  95  L-205,  50  L-200,   0
+        L-215, -65  L-230,-120  L-225,-175  L-185,-225
+        L -95,-258  Z
+      " fill="url(#g-skull)"/>
+
+      <!-- LEFT shadow cheek (dark plane) -->
+      <polygon points="-95,-258 -185,-225 -225,-175 -230,-120 -215,-65 -190,-30 -155,-5 -110,-200 -95,-258"
+               fill="url(#g-left)"/>
+
+      <!-- RIGHT highlight cheek (bright plane) -->
+      <polygon points="95,-258 185,-225 225,-175 230,-120 215,-65 190,-30 155,-5 110,-200 95,-258"
+               fill="url(#g-right)"/>
+
+      <!-- UPPER SKULL plateau (top lit) -->
+      <polygon points="0,-270 95,-258 130,-215 80,-185 0,-178 -80,-185 -130,-215 -95,-258"
+               fill="#5280a0" opacity="0.75"/>
+
+      <!-- CENTER FOREHEAD PLANE -->
+      <polygon points="0,-178 80,-185 110,-155 70,-125 0,-115 -70,-125 -110,-155 -80,-185"
+               fill="#3d6078" opacity="0.65"/>
+
+      <!-- ─── MUZZLE — HIGH CONTRAST PALE SILVER-SLATE ─── -->
+      <!-- This is the key: the muzzle is MUCH lighter than the surrounding dark face -->
+      <polygon points="0,-115 70,-125 95,-95 88,-55 72,-20 50,15 25,40 0,52 -25,40 -50,15 -72,-20 -88,-55 -95,-95 -70,-125"
+               fill="url(#g-muzzle)"/>
+
+      <!-- Muzzle lower section (chin area) -->
+      <polygon points="0,52 50,15 75,50 80,90 72,130 50,165 25,185 0,192 -25,185 -50,165 -72,130 -80,90 -75,50 -50,15"
+               fill="#2a4560" opacity="0.95"/>
+
+      <!-- NOSE bridge highlight on top of muzzle -->
+      <ellipse cx="0" cy="-62" rx="26" ry="18" fill="#8ab0c8" opacity="0.5"/>
+
+      <!-- NOSE truffle (small, round) -->
+      <ellipse cx="0" cy="-10" rx="22" ry="14" fill="#030609"/>
+      <ellipse cx="-6" cy="-14" rx="7" ry="4" fill="#1e293b" opacity="0.6"/>
+
+      <!-- PHILTRUM line -->
+      <line x1="0" y1="3" x2="0" y2="35" stroke="#050b12" stroke-width="4" opacity="0.9"/>
+
+      <!-- Upper lip pads -->
+      <ellipse cx="-22" cy="36" rx="22" ry="13" fill="#1e3345" opacity="0.85"/>
+      <ellipse cx="22" cy="36" rx="22" ry="13" fill="#1e3345" opacity="0.85"/>
+
+      <!-- CHIN -->
+      <ellipse cx="0" cy="172" rx="48" ry="28" fill="#0f1e2d"/>
+
+      <!-- JAW + lower cheeks (converge to neck) -->
+      <!-- Left -->
+      <polygon points="-110,-200 -155,-5 -200,0 -215,95 -210,135 -155,200 -110,-200"
+               fill="#080e1a" opacity="0.8"/>
+      <!-- Right -->
+      <polygon points="110,-200 155,-5 200,0 215,95 210,135 155,200 110,-200"
+               fill="#1e3c55" opacity="0.65"/>
+
+      <!-- ─── EARS — LARGE AND CLEARLY POINTED ─── -->
+      <!-- Critical: ears must be big enough to read as cat ears immediately -->
+
+      <!-- LEFT EAR outer (dark, slightly flared) -->
+      <path d="M -70,-250 L -100,-340 L -160,-315 L -148,-240 L -100,-235 Z"
+            fill="#0a1520"/>
+      <!-- LEFT EAR inner pale slate -->
+      <path d="M -78,-252 L -104,-332 L -152,-310 L -142,-244 L -106,-240 Z"
+            fill="#1a3045"/>
+      <!-- LEFT EAR tip black -->
+      <polygon points="-100,-340 -160,-315 -132,-355" fill="#030609"/>
+      <!-- LEFT EAR inner pinna (lighter) -->
+      <path d="M -85,-255 L -108,-325 L -145,-305 L -136,-248 L -110,-245 Z"
+            fill="#2d4f65" opacity="0.75"/>
+
+      <!-- RIGHT EAR outer -->
+      <path d="M 70,-250 L 100,-340 L 160,-315 L 148,-240 L 100,-235 Z"
+            fill="#0a1520"/>
+      <!-- RIGHT EAR inner pale -->
+      <path d="M 78,-252 L 104,-332 L 152,-310 L 142,-244 L 106,-240 Z"
+            fill="#1a3045"/>
+      <!-- RIGHT EAR tip black -->
+      <polygon points="100,-340 160,-315 132,-355" fill="#030609"/>
+      <!-- RIGHT EAR inner pinna -->
+      <path d="M 85,-255 L 108,-325 L 145,-305 L 136,-248 L 110,-245 Z"
+            fill="#2d4f65" opacity="0.75"/>
+
+      <!-- ─── EYES ─── -->
+      <!-- Large, above the muzzle, clearly feline, amber iris + vertical pupil -->
+
+      <!-- LEFT socket -->
+      <ellipse cx="-82" cy="-110" rx="52" ry="36" fill="#020407"/>
+      <!-- LEFT iris -->
+      <ellipse cx="-82" cy="-110" rx="42" ry="30" fill="url(#g-eye)"/>
+      <!-- LEFT pupil -->
+      <ellipse cx="-82" cy="-110" rx="11" ry="24" fill="#010203"/>
+      <!-- LEFT cyan glint -->
+      <ellipse cx="-62" cy="-122" rx="10" ry="6" fill="#00f5ff" opacity="0.92"/>
+      <!-- LEFT white secondary glint -->
+      <ellipse cx="-95" cy="-102" rx="5" ry="3.5" fill="#ffffff" opacity="0.5"/>
+      <!-- LEFT eyelid crease -->
+      <path d="M -130,-105 Q -82,-138 -34,-105" stroke="#030810" stroke-width="3.5" fill="none"/>
+      <path d="M -130,-105 Q -82,-75  -34,-105" stroke="#030810" stroke-width="2" fill="none"/>
+
+      <!-- RIGHT socket -->
+      <ellipse cx="82" cy="-110" rx="52" ry="36" fill="#020407"/>
+      <!-- RIGHT iris -->
+      <ellipse cx="82" cy="-110" rx="42" ry="30" fill="url(#g-eye)"/>
+      <!-- RIGHT pupil -->
+      <ellipse cx="82" cy="-110" rx="11" ry="24" fill="#010203"/>
+      <!-- RIGHT cyan glint -->
+      <ellipse cx="102" cy="-122" rx="10" ry="6" fill="#00f5ff" opacity="0.92"/>
+      <!-- RIGHT secondary glint -->
+      <ellipse cx="69" cy="-102" rx="5" ry="3.5" fill="#ffffff" opacity="0.5"/>
+      <!-- RIGHT eyelid crease -->
+      <path d="M 34,-105 Q 82,-138 130,-105" stroke="#030810" stroke-width="3.5" fill="none"/>
+      <path d="M 34,-105 Q 82,-75  130,-105" stroke="#030810" stroke-width="2" fill="none"/>
+
+      <!-- ─── MALAR TEAR-DROP STRIPES (amber-outlined) ─── -->
+      <!-- Made broader and more visible — amber border makes them pop on dark face -->
+
+      <!-- LEFT malar outer (amber) -->
+      <path d="M -64,-90 C -60,-62 -54,-28 -46,14 C -40,48 -36,80 -36,108"
+            stroke="#b45309" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <!-- LEFT malar inner black -->
+      <path d="M -64,-90 C -60,-62 -54,-28 -46,14 C -40,48 -36,80 -36,108"
+            stroke="#04080e" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <!-- LEFT malar highlight edge -->
+      <path d="M -64,-90 C -60,-62 -54,-28 -46,14 C -40,48 -36,80 -36,108"
+            stroke="#253d52" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.55"/>
+
+      <!-- RIGHT malar outer (amber) -->
+      <path d="M 64,-90 C 60,-62 54,-28 46,14 C 40,48 36,80 36,108"
+            stroke="#b45309" stroke-width="18" fill="none" stroke-linecap="round" opacity="0.7"/>
+      <!-- RIGHT malar inner black -->
+      <path d="M 64,-90 C 60,-62 54,-28 46,14 C 40,48 36,80 36,108"
+            stroke="#04080e" stroke-width="12" fill="none" stroke-linecap="round"/>
+      <!-- RIGHT malar highlight -->
+      <path d="M 64,-90 C 60,-62 54,-28 46,14 C 40,48 36,80 36,108"
+            stroke="#253d52" stroke-width="5" fill="none" stroke-linecap="round" opacity="0.55"/>
+
+      <!-- ─── FOREHEAD SPOTS (amber, 5 visible spots) ─── -->
+      <ellipse cx="0" cy="-200" rx="10" ry="9" fill="#fbbf24" opacity="0.7"/>
+      <ellipse cx="-32" cy="-210" rx="8" ry="7" fill="#f59e0b" opacity="0.55"/>
+      <ellipse cx="32" cy="-210" rx="8" ry="7" fill="#f59e0b" opacity="0.55"/>
+      <ellipse cx="-62" cy="-198" rx="6" ry="5.5" fill="#d97706" opacity="0.38"/>
+      <ellipse cx="62" cy="-198" rx="6" ry="5.5" fill="#d97706" opacity="0.38"/>
+
+      <!-- ─── SPEED COLLAR + DISRUPTOR HEX NODE ─── -->
+
+      <!-- Neck/collar band -->
+      <path d="M -215,95 C -180,125 -102,150 0,153 C 102,150 180,125 215,95
+               L 215,130 C 180,160 102,182 0,185 C -102,182 -180,160 -215,130 Z"
+            fill="#07101b"/>
+      <!-- Collar top accent -->
+      <path d="M -215,95 C -180,125 -102,150 0,153 C 102,150 180,125 215,95"
+            stroke="#00f5ff" stroke-width="2.5" fill="none" opacity="0.5"/>
+
+      <!-- Central hex Disruptor node -->
+      <polygon points="0,92 22,104 22,128 0,140 -22,128 -22,104"
+               fill="none" stroke="#00f5ff" stroke-width="4" opacity="0.95"/>
+      <polygon points="0,99 16,108 16,122 0,131 -16,122 -16,108"
+               fill="url(#g-cyan)" opacity="0.88"/>
+      <circle cx="0" cy="115" r="6" fill="#fff"/>
+
+      <!-- Pulse dashes left/right -->
+      <line x1="-22" y1="115" x2="-88" y2="115" stroke="#00f5ff" stroke-width="2.2"
+            opacity="0.68" stroke-dasharray="7,5"/>
+      <line x1="22" y1="115" x2="88" y2="115" stroke="#00f5ff" stroke-width="2.2"
+            opacity="0.68" stroke-dasharray="7,5"/>
+
+      <!-- Amber speed lines (motion blur hints, sides of hex) -->
+      <line x1="-335" y1="30" x2="-242" y2="30" stroke="#fbbf24" stroke-width="3.5"
+            opacity="0.22" stroke-linecap="round"/>
+      <line x1="-335" y1="52" x2="-250" y2="52" stroke="#fbbf24" stroke-width="2.5"
+            opacity="0.15" stroke-linecap="round"/>
+      <line x1="242" y1="30" x2="335" y2="30" stroke="#fbbf24" stroke-width="3.5"
+            opacity="0.22" stroke-linecap="round"/>
+      <line x1="250" y1="52" x2="335" y2="52" stroke="#fbbf24" stroke-width="2.5"
+            opacity="0.15" stroke-linecap="round"/>
+
+    </g>
+  </g>
+</svg>`;
+}
+
+async function renderLogo() {
+  const outputDir = path.join(__dirname, '..', 'docs', 'images');
+  if (!fs.existsSync(outputDir)) fs.mkdirSync(outputDir, { recursive: true });
+
+  const svg = buildLogoSvg();
+  const svgPath = path.join(outputDir, 'logo.svg');
+  const pngPath = path.join(outputDir, 'logo.png');
+
+  fs.writeFileSync(svgPath, svg, 'utf8');
+  const resvg = new Resvg(svg, { fitTo: { mode: 'width', value: 1024 } });
+  fs.writeFileSync(pngPath, resvg.render().asPng());
+  console.log('✓ VeloceEngine Cheetah HIGH-CONTRAST v4 rendered.');
+}
+
+renderLogo().catch((err) => { console.error(err); process.exit(1); });

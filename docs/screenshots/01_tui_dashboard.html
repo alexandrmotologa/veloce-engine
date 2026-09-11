@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>veloce-engine --synthetic-load --rate=50000 --symbol=AAPL</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0a0e17;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #c8d8e8;
+  min-height: 100vh;
+  padding: 0;
+}
+.terminal {
+  background: #0a0e17;
+  padding: 18px 22px 24px;
+  min-width: 900px;
+  max-width: 980px;
+}
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #12192a;
+  border-radius: 10px 10px 0 0;
+  padding: 10px 16px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #1e2d40;
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #28c840; }
+.title-bar span { color: #607080; font-size: 12px; margin-left: 8px; }
+.body {
+  background: #0d1220;
+  border-radius: 0 0 10px 10px;
+  padding: 18px 20px 20px;
+  border: 1px solid #1a2538;
+  border-top: none;
+}
+.c  { color: #00e5ff; }  /* cyan  */
+.g  { color: #22c55e; }  /* green */
+.r  { color: #f87171; }  /* red   */
+.y  { color: #fbbf24; }  /* amber */
+.w  { color: #e2e8f0; }  /* white */
+.d  { color: #64748b; }  /* dim   */
+.b  { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="title-bar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <span>veloce-engine --synthetic-load --rate=50000 --symbol=AAPL</span>
+  </div>
+  <div class="body">
+<pre><span class="c">========================================================================================</span>
+<span class="w b">  VELOCE-ENGINE | High-Frequency Limit Order Book &amp; Matching Core</span>
+<span class="c">========================================================================================</span>
+ Symbol: <span class="w b">AAPL  </span> | Orders: <span class="w b">32,718,406</span> | Matches: <span class="w b">16,224,812</span> | Rate: <span class="g b">32,354,022 matches/s</span>
+ Latency (µs):  p50: <span class="c">0.028</span> | p90: <span class="c">0.042</span> | p99: <span class="y">0.061</span> | p99.9: <span class="r">0.089</span> | Max: <span class="r b">0.124</span>
+ Spread: <span class="w b">$0.0400</span> | Best Bid: <span class="g">$150.2800</span> | Best Ask: <span class="r">$150.3200</span>
+<span class="d">----------------------------------------------------------------------------------------</span>
+<span class="w b"> BID QTY                BID DEPTH           PRICE     ASK DEPTH                     ASK QTY</span>
+<span class="d">----------------------------------------------------------------------------------------</span>
+ <span class="g">     5,200</span> <span class="g">████████        </span> <span class="y b"> $150.2800  </span> <span class="r">███████         </span> <span class="r">     4,700</span>
+ <span class="g">     3,800</span> <span class="g">██████          </span> <span class="y b"> $150.2600  </span> <span class="r">█████████████   </span> <span class="r">     8,300</span>
+ <span class="g">     7,100</span> <span class="g">███████████     </span> <span class="y b"> $150.2400  </span> <span class="r">█████           </span> <span class="r">     3,100</span>
+ <span class="g">     2,400</span> <span class="g">████            </span> <span class="y b"> $150.2200  </span> <span class="r">█████████       </span> <span class="r">     5,900</span>
+ <span class="g">     9,500</span> <span class="g">████████████████</span> <span class="y b"> $150.2000  </span> <span class="r">███             </span> <span class="r">     2,200</span>
+ <span class="g">     4,100</span> <span class="g">██████          </span> <span class="y b"> $150.1800  </span> <span class="r">████████████    </span> <span class="r">     7,400</span>
+ <span class="g">     6,200</span> <span class="g">██████████      </span> <span class="y b"> $150.1600  </span> <span class="r">████████        </span> <span class="r">     4,800</span>
+<span class="d">----------------------------------------------------------------------------------------</span>
+<span class="w b"> RECENT TRANSACTION TAPE</span>
+<span class="d">----------------------------------------------------------------------------------------</span>
+ [Trade #10042] <span class="g b">BID </span>     5,200 shares @ <span class="w b">$150.2800</span>
+ [Trade #10041] <span class="r b">ASK </span>     3,800 shares @ <span class="w b">$150.3200</span>
+ [Trade #10040] <span class="g b">BID </span>     7,100 shares @ <span class="w b">$150.2600</span>
+ [Trade #10039] <span class="r b">ASK </span>     2,400 shares @ <span class="w b">$150.3400</span>
+ [Trade #10038] <span class="g b">BID </span>     9,500 shares @ <span class="w b">$150.2400</span>
+<span class="c">========================================================================================</span></pre>
+  </div>
+</div>
+</body>
+</html>

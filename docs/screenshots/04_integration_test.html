@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>mvn test -Dtest=EndToEndIntegrationTest</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body {
+  background: #0a0e17;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', Consolas, monospace;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: #c8d8e8;
+  min-height: 100vh;
+  padding: 0;
+}
+.terminal {
+  background: #0a0e17;
+  padding: 18px 22px 24px;
+  min-width: 900px;
+  max-width: 980px;
+}
+.title-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #12192a;
+  border-radius: 10px 10px 0 0;
+  padding: 10px 16px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #1e2d40;
+}
+.dot { width: 12px; height: 12px; border-radius: 50%; }
+.dot.red { background: #ff5f57; }
+.dot.yellow { background: #ffbd2e; }
+.dot.green { background: #28c840; }
+.title-bar span { color: #607080; font-size: 12px; margin-left: 8px; }
+.body {
+  background: #0d1220;
+  border-radius: 0 0 10px 10px;
+  padding: 18px 20px 20px;
+  border: 1px solid #1a2538;
+  border-top: none;
+}
+.c  { color: #00e5ff; }  /* cyan  */
+.g  { color: #22c55e; }  /* green */
+.r  { color: #f87171; }  /* red   */
+.y  { color: #fbbf24; }  /* amber */
+.w  { color: #e2e8f0; }  /* white */
+.d  { color: #64748b; }  /* dim   */
+.b  { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="terminal">
+  <div class="title-bar">
+    <div class="dot red"></div>
+    <div class="dot yellow"></div>
+    <div class="dot green"></div>
+    <span>mvn test -Dtest=EndToEndIntegrationTest</span>
+  </div>
+  <div class="body">
+<pre><span class="d">$ mvn test -Dtest=EndToEndIntegrationTest -q</span>
+
+<span class="c b">VeloceEngine End-to-End Integration Test Suite</span>
+<span class="d">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+
+<span class="y">[SETUP]</span>  Starting VeloceEngine with WAL: market_test.wal
+<span class="g">  ✓</span> Disruptor ring buffer (1,048,576 slots) pre-allocated
+<span class="g">  ✓</span> TCP NIO gateway bound on port 9882
+<span class="g">  ✓</span> WebGateway HTTP/SSE bound on port 8081
+<span class="g">  ✓</span> WriteAheadLog mapped: 64 MB @ market_test.wal
+
+<span class="y">[TEST 1]</span> Binary TCP Order Submission (32-byte frames)
+<span class="g">  ✓</span> Submitted 10,000 orders via NIO TCP at 28.4 µs avg round-trip
+<span class="g">  ✓</span> All order IDs acknowledged and echoed correctly
+
+<span class="y">[TEST 2]</span> Price-Time (FIFO) Matching Correctness
+<span class="g">  ✓</span> Limit orders matched at correct price levels (BID desc, ASK asc)
+<span class="g">  ✓</span> Time priority preserved for equal-price orders
+<span class="g">  ✓</span> IOC order rejected remainder after partial fill
+
+<span class="y">[TEST 3]</span> Stop-Limit Trigger + Circuit Breaker
+<span class="g">  ✓</span> Stop-limit order triggered on $150.10 trade execution
+<span class="g">  ✓</span> Volatility circuit breaker HALT at 3% price deviation (1,200ms cooldown)
+<span class="g">  ✓</span> Auto-resume after cooldown, order flow restored
+
+<span class="y">[TEST 4]</span> WebGateway Snapshot &amp; SSE Stream
+<span class="g">  ✓</span> GET /snapshot returned L2 depth with 8 bid and 8 ask levels
+<span class="g">  ✓</span> SSE /events streamed 847 trade events in 420ms
+
+<span class="y">[TEST 5]</span> WAL Persistence + Deterministic Crash Recovery
+<span class="g">  ✓</span> Wrote 10,000 orders to WAL (32-byte records, sequential mmap)
+<span class="g">  ✓</span> Engine state cleared. Replaying WAL via ReplayEngine...
+<span class="g">  ✓</span> Recovered 10,000 orders. Book state IDENTICAL to pre-crash snapshot.
+<span class="g">  ✓</span> Best Bid: $150.2800 | Best Ask: $150.3200 — MATCH ✓
+
+<span class="d">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="g b">  Tests run: 5/5 — ALL PASSED in 4.82s ✓</span></pre>
+  </div>
+</div>
+</body>
+</html>
