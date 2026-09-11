@@ -26,3 +26,9 @@ Thumbs.db
 .settings/
 .vscode/
 bin/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.wal
