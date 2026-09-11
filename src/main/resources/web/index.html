@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VeloceEngine — Ultra-Low-Latency Matching Core</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="app-header">
+        <div class="brand">
+            <div class="pulse-dot"></div>
+            <h1>VELOCE<span>ENGINE</span></h1>
+            <span class="badge">JAVA 21 LTS</span>
+            <span class="badge lmax">LMAX DISRUPTOR</span>
+        </div>
+        <div class="metrics-bar">
+            <div class="metric">
+                <span class="label">SYMBOL</span>
+                <span class="val" id="val-symbol">AAPL</span>
+            </div>
+            <div class="metric">
+                <span class="label">BEST BID</span>
+                <span class="val bid" id="val-best-bid">$0.0000</span>
+            </div>
+            <div class="metric">
+                <span class="label">SPREAD</span>
+                <span class="val spread" id="val-spread">$0.0000</span>
+            </div>
+            <div class="metric">
+                <span class="label">BEST ASK</span>
+                <span class="val ask" id="val-best-ask">$0.0000</span>
+            </div>
+            <div class="metric">
+                <span class="label">PROCESSED</span>
+                <span class="val" id="val-processed">0</span>
+            </div>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <!-- Order Placement Ticket -->
+        <section class="card order-ticket-card">
+            <h2>Order Ticket</h2>
+            <form id="order-form">
+                <div class="side-selector">
+                    <button type="button" class="side-btn buy active" id="btn-buy">BUY</button>
+                    <button type="button" class="side-btn sell" id="btn-sell">SELL</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="order-type">Order Type</label>
+                    <select id="order-type">
+                        <option value="LIMIT">Limit</option>
+                        <option value="MARKET">Market</option>
+                        <option value="IOC">Immediate-Or-Cancel (IOC)</option>
+                        <option value="FOK">Fill-Or-Kill (FOK)</option>
+                        <option value="POST_ONLY">Post-Only (Maker)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="order-price">Price ($)</label>
+                    <input type="number" id="order-price" step="0.01" value="150.00" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="order-qty">Quantity</label>
+                    <input type="number" id="order-qty" step="1" value="50" min="1" required>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submit-order-btn">Submit Buy Order</button>
+            </form>
+
+            <div class="cancel-box">
+                <h3>Cancel Order</h3>
+                <div class="input-inline">
+                    <input type="number" id="cancel-order-id" placeholder="Order ID">
+                    <button type="button" id="btn-cancel">Cancel</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Market Depth Ladder -->
+        <section class="card depth-ladder-card">
+            <h2>Market Depth Ladder (L2)</h2>
+            <div class="ladder-header">
+                <span class="col-bid-qty">Bid Size</span>
+                <span class="col-bid-bar">Bid Depth</span>
+                <span class="col-price">Price ($)</span>
+                <span class="col-ask-bar">Ask Depth</span>
+                <span class="col-ask-qty">Ask Size</span>
+            </div>
+            <div class="ladder-body" id="ladder-rows">
+                <div class="empty-state">Waiting for order flow...</div>
+            </div>
+        </section>
+
+        <!-- Transaction Tape & Telemetry -->
+        <section class="card tape-card">
+            <h2>Live Transaction Tape</h2>
+            <div class="tape-list" id="tape-list">
+                <div class="empty-state">No trades executed yet</div>
+            </div>
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
