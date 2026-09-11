@@ -39,6 +39,10 @@ public final class MatchingEngine {
         this.book.setTradeListener(listener);
     }
 
+    public void setWriteAheadLog(com.engine.veloce.journal.WriteAheadLog wal) {
+        this.handler.setWriteAheadLog(wal);
+    }
+
     public void start() {
         ring.start();
     }

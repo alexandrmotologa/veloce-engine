@@ -42,6 +42,15 @@ public final class VeloceCli implements Callable<Integer> {
     @Option(names = {"--duration"}, defaultValue = "0", description = "Duration in seconds to run before exiting (0 for infinite)")
     private int duration = 0;
 
+    @Option(names = {"--tcp-port"}, defaultValue = "9881", description = "TCP order gateway port (0 to disable)")
+    private int tcpPort = 9881;
+
+    @Option(names = {"--http-port"}, defaultValue = "8080", description = "Embedded WebGateway HTTP/SSE port (0 to disable)")
+    private int httpPort = 8080;
+
+    @Option(names = {"--wal"}, description = "Path to write-ahead log file (optional)")
+    private String walPath = null;
+
     @Override
     public Integer call() throws Exception {
         System.out.println("Starting VeloceEngine for " + symbol + " with " + waitStrategy + " wait strategy...");
@@ -56,6 +65,14 @@ public final class VeloceCli implements Callable<Integer> {
                 ProducerType.MULTI
         );
 
+        com.engine.veloce.journal.WriteAheadLog wal = null;
+        if (walPath != null && !walPath.isBlank()) {
+            java.io.File walFile = new java.io.File(walPath);
+            wal = new com.engine.veloce.journal.WriteAheadLog(walFile, 64L * 1024 * 1024);
+            engine.setWriteAheadLog(wal);
+            System.out.println("[WAL] Active write-ahead log mapped to " + walFile.getAbsolutePath());
+        }
+
         LatencyRecorder latencyRecorder = new LatencyRecorder();
         TapeWidget tapeWidget = new TapeWidget(10);
         AtomicLong totalMatches = new AtomicLong();
@@ -68,10 +85,35 @@ public final class VeloceCli implements Callable<Integer> {
 
         engine.start();
 
+        com.engine.veloce.network.TcpOrderServer tcpServer = null;
+        if (tcpPort > 0) {
+            tcpServer = new com.engine.veloce.network.TcpOrderServer(tcpPort, engine);
+            tcpServer.start();
+            System.out.println("[TCP] Java NIO order gateway listening on port " + tcpServer.getBoundPort());
+        }
+
+        com.engine.veloce.network.WebGateway webGateway = null;
+        if (httpPort > 0) {
+            webGateway = new com.engine.veloce.network.WebGateway(httpPort, engine, latencyRecorder);
+            webGateway.start();
+            System.out.println("[HTTP] Web Dashboard & SSE Gateway available at http://127.0.0.1:" + webGateway.getBoundPort());
+        }
+
         AtomicBoolean running = new AtomicBoolean(true);
+        final com.engine.veloce.network.TcpOrderServer finalTcp = tcpServer;
+        final com.engine.veloce.network.WebGateway finalWeb = webGateway;
+        final com.engine.veloce.journal.WriteAheadLog finalWal = wal;
+
         Thread shutdownHook = new Thread(() -> {
             running.set(false);
+            if (finalWeb != null) finalWeb.stop();
+            if (finalTcp != null) finalTcp.stop();
             engine.shutdown();
+            if (finalWal != null) {
+                try {
+                    finalWal.close();
+                } catch (Exception ignored) {}
+            }
         });
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 

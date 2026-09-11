@@ -11,10 +11,15 @@ import com.lmax.disruptor.EventHandler;
 public final class OrderEventHandler implements EventHandler<OrderEvent> {
 
     private final LimitOrderBook book;
+    private com.engine.veloce.journal.WriteAheadLog wal;
     private long processedCount;
 
     public OrderEventHandler(LimitOrderBook book) {
         this.book = book;
+    }
+
+    public void setWriteAheadLog(com.engine.veloce.journal.WriteAheadLog wal) {
+        this.wal = wal;
     }
 
     @Override
@@ -26,6 +31,16 @@ public final class OrderEventHandler implements EventHandler<OrderEvent> {
 
         switch (command) {
             case NEW_ORDER -> {
+                if (wal != null) {
+                    wal.appendOrder(
+                            event.getOrderId(),
+                            event.getSide(),
+                            event.getOrderType(),
+                            event.getPrice(),
+                            event.getQuantity(),
+                            event.getTimestampNs()
+                    );
+                }
                 OrderStatus status = book.processOrder(
                         event.getOrderId(),
                         event.getSide(),

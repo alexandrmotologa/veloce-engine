@@ -66,3 +66,34 @@ Parsed tags:
 - `44`: Price (Fixed-point price scaled to integer representation)
 - `40`: OrdType (`1` = Market, `2` = Limit)
 - `59`: TimeInForce (`0` = Day, `3` = IOC, `4` = FOK)
+
+## 4. Web Gateway HTTP & Server-Sent Events (SSE)
+
+VeloceEngine hosts an embedded HTTP gateway running on Java Virtual Threads for browser monitoring and order routing.
+
+### Endpoints
+
+| Method | Path | Content-Type | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/` | `text/html` | Serves the interactive trading dashboard |
+| `GET` | `/style.css` | `text/css` | Dashboard stylesheet |
+| `GET` | `/app.js` | `application/javascript` | Client-side reactive ladder & SSE subscriber |
+| `GET` | `/api/snapshot` | `application/json` | Current L2 market depth snapshot (bids, asks, spread) |
+| `POST` | `/api/order` | `application/json` | REST order submission (`{"side":"BUY","type":"LIMIT","price":150.0,"qty":50}`) |
+| `POST` | `/api/cancel` | `application/json` | REST order cancellation (`{"orderId":1001}`) |
+| `GET` | `/api/events` | `text/event-stream` | Real-time SSE stream for `snapshot` (10 FPS) and `trade` events |
+
+## 5. Memory-Mapped Write-Ahead Log (WAL) Format
+
+The journal sequentially logs incoming order frames directly into an OS page-cache-backed memory-mapped file (`MappedByteBuffer`).
+
+Each entry consists of a 16-byte envelope followed by the 32-byte `BinaryOrderFrame`:
+
+| Offset | Length | Type | Field Name | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| 0 | 4 bytes | `int32` | `magic` | Identifier `0x564C4345` ("VLCE") |
+| 4 | 4 bytes | `int32` | `payloadLength` | Payload size in bytes (`32`) |
+| 8 | 8 bytes | `int64` | `sequence` | Monotonically increasing sequence number |
+| 16 | 32 bytes | `BinaryOrderFrame` | `payload` | The complete binary order frame |
+
+Total entry size: Exactly 48 bytes per logged order. Replaying uses zero heap allocations.
