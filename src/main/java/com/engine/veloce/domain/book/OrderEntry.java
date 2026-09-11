@@ -9,9 +9,12 @@ import com.engine.veloce.domain.model.Side;
  */
 public final class OrderEntry {
     private long orderId;
+    private long participantId;
     private long price;
     private long remainingQty;
     private long initialQty;
+    private long initialDisplayQty;
+    private long hiddenQty;
     private long timestampNs;
     private Side side;
     private OrderType orderType;
@@ -32,10 +35,27 @@ public final class OrderEntry {
                      OrderType orderType,
                      PriceLevel parentLevel,
                      int poolIndex) {
+        init(orderId, 0, price, initialQty, initialQty, 0, timestampNs, side, orderType, parentLevel, poolIndex);
+    }
+
+    public void init(long orderId,
+                     long participantId,
+                     long price,
+                     long initialQty,
+                     long displayQty,
+                     long hiddenQty,
+                     long timestampNs,
+                     Side side,
+                     OrderType orderType,
+                     PriceLevel parentLevel,
+                     int poolIndex) {
         this.orderId = orderId;
+        this.participantId = participantId;
         this.price = price;
         this.initialQty = initialQty;
-        this.remainingQty = initialQty;
+        this.remainingQty = displayQty;
+        this.initialDisplayQty = displayQty;
+        this.hiddenQty = hiddenQty;
         this.timestampNs = timestampNs;
         this.side = side;
         this.orderType = orderType;
@@ -47,15 +67,32 @@ public final class OrderEntry {
 
     public void reset() {
         this.orderId = 0;
+        this.participantId = 0;
         this.price = 0;
         this.remainingQty = 0;
         this.initialQty = 0;
+        this.initialDisplayQty = 0;
+        this.hiddenQty = 0;
         this.timestampNs = 0;
         this.side = null;
         this.orderType = null;
         this.parentLevel = null;
         this.prev = null;
         this.next = null;
+    }
+
+    public boolean isIceberg() {
+        return hiddenQty > 0 || initialDisplayQty < initialQty;
+    }
+
+    public long replenish() {
+        if (hiddenQty <= 0) {
+            return 0;
+        }
+        long replenishAmount = Math.min(initialDisplayQty, hiddenQty);
+        this.remainingQty = replenishAmount;
+        this.hiddenQty -= replenishAmount;
+        return replenishAmount;
     }
 
     public long getOrderId() {
@@ -123,5 +160,17 @@ public final class OrderEntry {
 
     public void setRemainingQty(long remainingQty) {
         this.remainingQty = remainingQty;
+    }
+
+    public long getParticipantId() {
+        return participantId;
+    }
+
+    public long getHiddenQty() {
+        return hiddenQty;
+    }
+
+    public long getInitialDisplayQty() {
+        return initialDisplayQty;
     }
 }

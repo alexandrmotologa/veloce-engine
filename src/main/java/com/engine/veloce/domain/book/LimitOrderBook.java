@@ -2,6 +2,7 @@ package com.engine.veloce.domain.book;
 
 import com.engine.veloce.domain.model.OrderStatus;
 import com.engine.veloce.domain.model.OrderType;
+import com.engine.veloce.domain.model.SelfTradePreventionMode;
 import com.engine.veloce.domain.model.Side;
 import com.engine.veloce.domain.pool.OrderEntryPool;
 import com.engine.veloce.domain.pool.PriceLevelPool;
@@ -32,6 +33,11 @@ public final class LimitOrderBook {
     private final PriceLevelPool levelPool;
     private final TradeEventPool tradePool;
 
+    private final StopOrderBook stopOrderBook;
+    private final StopOrderBook.TriggerCallback stopTriggerCallback;
+    private SelfTradePreventionMode stpMode = SelfTradePreventionMode.NONE;
+    private long lastTradedPrice;
+
     private TradeListener tradeListener;
     private long tradeSequence;
 
@@ -43,6 +49,9 @@ public final class LimitOrderBook {
         this.orderPool = orderPool;
         this.levelPool = levelPool;
         this.tradePool = tradePool;
+        this.stopOrderBook = new StopOrderBook();
+        this.stopTriggerCallback = (sId, sPartId, sSide, sType, sLimitPrice, sQty, sTs) ->
+                processOrder(sId, sPartId, sSide, sType, sLimitPrice, sQty, sQty, 0L, sTs);
 
         this.bidLevels = new Long2ObjectHashMap<>(4096, 0.6f);
         this.askLevels = new Long2ObjectHashMap<>(4096, 0.6f);
@@ -51,6 +60,22 @@ public final class LimitOrderBook {
 
     public void setTradeListener(TradeListener tradeListener) {
         this.tradeListener = tradeListener;
+    }
+
+    public void setSelfTradePreventionMode(SelfTradePreventionMode stpMode) {
+        this.stpMode = stpMode;
+    }
+
+    public SelfTradePreventionMode getSelfTradePreventionMode() {
+        return stpMode;
+    }
+
+    public StopOrderBook getStopOrderBook() {
+        return stopOrderBook;
+    }
+
+    public long getLastTradedPrice() {
+        return lastTradedPrice;
     }
 
     /**
@@ -64,11 +89,33 @@ public final class LimitOrderBook {
                                     long price,
                                     long qty,
                                     long timestampNs) {
+        return processOrder(orderId, 0L, side, type, price, qty, qty, 0L, timestampNs);
+    }
+
+    /**
+     * Processes an incoming order with support for Participant IDs (STP), Iceberg display quantities,
+     * and conditional Stop triggers.
+     */
+    public OrderStatus processOrder(long orderId,
+                                    long participantId,
+                                    Side side,
+                                    OrderType type,
+                                    long price,
+                                    long qty,
+                                    long displayQty,
+                                    long stopPrice,
+                                    long timestampNs) {
         if (qty <= 0) {
             return OrderStatus.REJECTED;
         }
 
-        // 1. Post-Only check: must not cross opposite book
+        // 1. Conditional Stop order routing
+        if (stopPrice > 0) {
+            stopOrderBook.addStopOrder(orderId, participantId, side, type, price, stopPrice, qty, timestampNs);
+            return OrderStatus.NEW;
+        }
+
+        // 2. Post-Only check: must not cross opposite book
         if (type == OrderType.POST_ONLY) {
             if (side == Side.BID && bestAsk != null && bestAsk.getPrice() <= price) {
                 return OrderStatus.REJECTED;
@@ -78,7 +125,7 @@ public final class LimitOrderBook {
             }
         }
 
-        // 2. Fill-Or-Kill (FOK) check: verify if entire order can be filled immediately
+        // 3. Fill-Or-Kill (FOK) check: verify if entire order can be filled immediately
         if (type == OrderType.FOK) {
             if (!canFulfillFok(side, price, qty)) {
                 return OrderStatus.CANCELED;
@@ -88,7 +135,7 @@ public final class LimitOrderBook {
         long remainingQty = qty;
         boolean matchedAny = false;
 
-        // 3. Match against opposite side
+        // 4. Match against opposite side
         if (side == Side.BID) {
             while (remainingQty > 0 && bestAsk != null) {
                 if (type != OrderType.MARKET && bestAsk.getPrice() > price) {
@@ -96,6 +143,39 @@ public final class LimitOrderBook {
                 }
                 long matchPrice = bestAsk.getPrice();
                 OrderEntry makerOrder = bestAsk.getHead();
+
+                // Self-Trade Prevention (STP) check
+                if (stpMode != SelfTradePreventionMode.NONE && participantId != 0
+                        && makerOrder.getParticipantId() != 0 && makerOrder.getParticipantId() == participantId) {
+                    if (stpMode == SelfTradePreventionMode.CANCEL_NEWEST) {
+                        return matchedAny ? OrderStatus.PARTIALLY_FILLED : OrderStatus.CANCELED;
+                    } else if (stpMode == SelfTradePreventionMode.CANCEL_OLDEST) {
+                        activeOrders.remove(makerOrder.getOrderId());
+                        bestAsk.remove(makerOrder);
+                        orderPool.release(makerOrder);
+                        if (bestAsk.isEmpty()) {
+                            removeAskLevel(bestAsk);
+                        }
+                        continue;
+                    } else if (stpMode == SelfTradePreventionMode.DECREMENT_AND_CANCEL) {
+                        long cancelQty = Math.min(remainingQty, makerOrder.getRemainingQty());
+                        makerOrder.reduceQty(cancelQty);
+                        bestAsk.reduceVolume(cancelQty);
+                        remainingQty -= cancelQty;
+                        if (makerOrder.isFilled()) {
+                            activeOrders.remove(makerOrder.getOrderId());
+                            bestAsk.remove(makerOrder);
+                            orderPool.release(makerOrder);
+                        }
+                        if (bestAsk.isEmpty()) {
+                            removeAskLevel(bestAsk);
+                        }
+                        if (remainingQty == 0) {
+                            return matchedAny ? OrderStatus.PARTIALLY_FILLED : OrderStatus.CANCELED;
+                        }
+                        continue;
+                    }
+                }
 
                 long matchQty = Math.min(remainingQty, makerOrder.getRemainingQty());
                 makerOrder.reduceQty(matchQty);
@@ -105,18 +185,31 @@ public final class LimitOrderBook {
 
                 boolean makerFilled = makerOrder.isFilled();
                 boolean takerFilled = remainingQty == 0;
+                this.lastTradedPrice = matchPrice;
 
                 emitTrade(++tradeSequence, timestampNs, makerOrder.getOrderId(), orderId,
                         matchPrice, matchQty, Side.BID, makerFilled, takerFilled);
 
                 if (makerFilled) {
-                    activeOrders.remove(makerOrder.getOrderId());
-                    bestAsk.remove(makerOrder);
-                    orderPool.release(makerOrder);
+                    if (makerOrder.isIceberg() && makerOrder.getHiddenQty() > 0) {
+                        long replenished = makerOrder.replenish();
+                        bestAsk.remove(makerOrder);
+                        bestAsk.append(makerOrder);
+                        bestAsk.reduceVolume(-replenished);
+                    } else {
+                        activeOrders.remove(makerOrder.getOrderId());
+                        bestAsk.remove(makerOrder);
+                        orderPool.release(makerOrder);
+                    }
                 }
 
                 if (bestAsk.isEmpty()) {
                     removeAskLevel(bestAsk);
+                }
+
+                // Check stop orders after each match
+                if (!stopOrderBook.isEmpty()) {
+                    stopOrderBook.evaluateTriggers(lastTradedPrice, stopTriggerCallback);
                 }
             }
         } else {
@@ -128,6 +221,39 @@ public final class LimitOrderBook {
                 long matchPrice = bestBid.getPrice();
                 OrderEntry makerOrder = bestBid.getHead();
 
+                // Self-Trade Prevention (STP) check
+                if (stpMode != SelfTradePreventionMode.NONE && participantId != 0
+                        && makerOrder.getParticipantId() != 0 && makerOrder.getParticipantId() == participantId) {
+                    if (stpMode == SelfTradePreventionMode.CANCEL_NEWEST) {
+                        return matchedAny ? OrderStatus.PARTIALLY_FILLED : OrderStatus.CANCELED;
+                    } else if (stpMode == SelfTradePreventionMode.CANCEL_OLDEST) {
+                        activeOrders.remove(makerOrder.getOrderId());
+                        bestBid.remove(makerOrder);
+                        orderPool.release(makerOrder);
+                        if (bestBid.isEmpty()) {
+                            removeBidLevel(bestBid);
+                        }
+                        continue;
+                    } else if (stpMode == SelfTradePreventionMode.DECREMENT_AND_CANCEL) {
+                        long cancelQty = Math.min(remainingQty, makerOrder.getRemainingQty());
+                        makerOrder.reduceQty(cancelQty);
+                        bestBid.reduceVolume(cancelQty);
+                        remainingQty -= cancelQty;
+                        if (makerOrder.isFilled()) {
+                            activeOrders.remove(makerOrder.getOrderId());
+                            bestBid.remove(makerOrder);
+                            orderPool.release(makerOrder);
+                        }
+                        if (bestBid.isEmpty()) {
+                            removeBidLevel(bestBid);
+                        }
+                        if (remainingQty == 0) {
+                            return matchedAny ? OrderStatus.PARTIALLY_FILLED : OrderStatus.CANCELED;
+                        }
+                        continue;
+                    }
+                }
+
                 long matchQty = Math.min(remainingQty, makerOrder.getRemainingQty());
                 makerOrder.reduceQty(matchQty);
                 bestBid.reduceVolume(matchQty);
@@ -136,23 +262,36 @@ public final class LimitOrderBook {
 
                 boolean makerFilled = makerOrder.isFilled();
                 boolean takerFilled = remainingQty == 0;
+                this.lastTradedPrice = matchPrice;
 
                 emitTrade(++tradeSequence, timestampNs, makerOrder.getOrderId(), orderId,
                         matchPrice, matchQty, Side.ASK, makerFilled, takerFilled);
 
                 if (makerFilled) {
-                    activeOrders.remove(makerOrder.getOrderId());
-                    bestBid.remove(makerOrder);
-                    orderPool.release(makerOrder);
+                    if (makerOrder.isIceberg() && makerOrder.getHiddenQty() > 0) {
+                        long replenished = makerOrder.replenish();
+                        bestBid.remove(makerOrder);
+                        bestBid.append(makerOrder);
+                        bestBid.reduceVolume(-replenished);
+                    } else {
+                        activeOrders.remove(makerOrder.getOrderId());
+                        bestBid.remove(makerOrder);
+                        orderPool.release(makerOrder);
+                    }
                 }
 
                 if (bestBid.isEmpty()) {
                     removeBidLevel(bestBid);
                 }
+
+                // Check stop orders after each match
+                if (!stopOrderBook.isEmpty()) {
+                    stopOrderBook.evaluateTriggers(lastTradedPrice, stopTriggerCallback);
+                }
             }
         }
 
-        // 4. Handle remaining unfilled quantity
+        // 5. Handle remaining unfilled quantity
         if (remainingQty == 0) {
             return OrderStatus.FILLED;
         }
@@ -162,10 +301,9 @@ public final class LimitOrderBook {
             return matchedAny ? OrderStatus.PARTIALLY_FILLED : OrderStatus.CANCELED;
         }
 
-        // 5. Rest remaining LIMIT or POST_ONLY order in the book
+        // 6. Rest remaining LIMIT or POST_ONLY order in the book
         OrderEntry entry = orderPool.acquire();
         if (entry == null) {
-            // Pool exhaustion fallback
             return matchedAny ? OrderStatus.PARTIALLY_FILLED : OrderStatus.REJECTED;
         }
 
@@ -194,7 +332,10 @@ public final class LimitOrderBook {
             }
         }
 
-        entry.init(orderId, price, remainingQty, timestampNs, side, type, level, entry.getPoolIndex());
+        long effectiveDisplay = (displayQty > 0 && displayQty < remainingQty) ? displayQty : remainingQty;
+        long hidden = remainingQty - effectiveDisplay;
+
+        entry.init(orderId, participantId, price, remainingQty, effectiveDisplay, hidden, timestampNs, side, type, level, entry.getPoolIndex());
         level.append(entry);
         activeOrders.put(orderId, entry);
 
