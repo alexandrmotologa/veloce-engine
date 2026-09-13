@@ -19,9 +19,11 @@ Please treat everyone in the community with respect, kindness, and constructive 
 
 ### 2. Pull Request Workflow
 
-1. **Fork the repository** and clone your fork locally:
+1. **Fork the repository** and clone locally:
    ```bash
-   git clone https://github.com/YOUR_USERNAME/veloce-engine.git
+   git clone https://github.com/alexandrmotologa/veloce-engine.git
+   # Or clone your personal fork if preparing a pull request:
+   # git clone https://github.com/YOUR_USERNAME/veloce-engine.git
    cd veloce-engine
    ```
 
