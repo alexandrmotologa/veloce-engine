@@ -18,11 +18,18 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Command(
         name = "veloce-engine",
-        mixinStandardHelpOptions = true,
+        mixinStandardHelpOptions = false,
         version = "veloce-engine 1.0.0",
-        description = "Ultra-low-latency Java 21 Limit Order Book & Matching Engine"
+        description = "Ultra-low-latency Java 21 Limit Order Book & Matching Engine",
+        subcommands = {VeloceCli.VersionCommand.class}
 )
 public final class VeloceCli implements Callable<Integer> {
+
+    @Option(names = {"-h", "--help"}, usageHelp = true, description = "Show this help message and exit.")
+    private boolean helpRequested;
+
+    @Option(names = {"-v", "-V", "--version"}, versionHelp = true, description = "Print version information and exit.")
+    private boolean versionRequested;
 
     @Option(names = {"--synthetic-load"}, description = "Generates synthetic order flow for stress and visualization")
     private boolean syntheticLoad = false;
@@ -203,6 +210,15 @@ public final class VeloceCli implements Callable<Integer> {
                     }
                 }
             }
+        }
+    }
+
+    @Command(name = "version", description = "Print version information and exit.")
+    public static final class VersionCommand implements Callable<Integer> {
+        @Override
+        public Integer call() {
+            System.out.println("veloce-engine 1.0.0");
+            return 0;
         }
     }
 }

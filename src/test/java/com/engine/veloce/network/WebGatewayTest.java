@@ -140,6 +140,17 @@ public class WebGatewayTest {
     }
 
     @Test
+    void shouldServeVersionEndpoint() throws Exception {
+        HttpURLConnection conn = (HttpURLConnection) URI.create(baseUrl + "/api/version").toURL().openConnection();
+        conn.setRequestMethod("GET");
+        assertThat(conn.getResponseCode()).isEqualTo(200);
+
+        String json = new String(conn.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        assertThat(json).contains("\"name\":\"veloce-engine\"");
+        assertThat(json).contains("\"version\":\"1.0.0\"");
+    }
+
+    @Test
     void shouldEstablishSseStream() throws Exception {
         HttpURLConnection conn = (HttpURLConnection) URI.create(baseUrl + "/api/events").toURL().openConnection();
         conn.setRequestMethod("GET");

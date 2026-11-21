@@ -12,7 +12,7 @@
 </p>
 
 <p align="center">
-  <strong>Ultra-Low-Latency In-Memory Limit Order Book &amp; Matching Engine — Java 21</strong><br>
+  <strong>Ultra-Low-Latency In-Memory Limit Order Book &amp; Matching Engine: Java 21</strong><br>
   Zero heap allocations on the critical path. 32M+ ops/sec. 29ns average match latency.
 </p>
 
@@ -20,18 +20,22 @@
 
 ## Visual Overview
 
+<p align="center">
+  <img src="docs/images/veloce_engine_demo.gif?raw=true" alt="VeloceEngine High-Frequency Trading & Depth Overview" width="100%" />
+</p>
+
 ### 1. Real-Time ANSI Terminal Market Depth Ladder
 Live order book visualization with bid/ask depth bars, latency percentile histogram (HdrHistogram), spread, and transaction tape.
 
 ```bash
-java -jar target/veloce-engine-1.0.0-SNAPSHOT.jar --synthetic-load --rate=50000 --symbol=AAPL
+java -jar target/veloce-engine-1.0.0.jar --synthetic-load --rate=50000 --symbol=AAPL
 ```
 
 <p align="center">
   <img src="docs/screenshots/01_tui_dashboard.png" alt="VeloceEngine ANSI Terminal Market Depth Ladder" width="860">
 </p>
 
-### 2. Python SDK — Algorithmic Market-Making Bot
+### 2. Python SDK: Algorithmic Market-Making Bot
 Pure Python client submitting 32-byte binary order frames over NIO TCP, with real-time trade execution events via SSE WebGateway.
 
 ```bash
@@ -42,7 +46,7 @@ cd sdk/python && python example_trading_bot.py
   <img src="docs/screenshots/02_python_sdk.png" alt="Python SDK Market-Making Bot Output" width="860">
 </p>
 
-### 3. JMH Microbenchmarks — Zero-Allocation Verification
+### 3. JMH Microbenchmarks: Zero-Allocation Verification
 Java Microbenchmark Harness results confirming 32M+ ops/sec throughput, 29.1ns average latency, and 0 bytes heap allocations on the matching hot-path.
 
 ```bash
@@ -216,7 +220,7 @@ mvn clean package -DskipTests
 ### Launch with Synthetic Flow and Live Web Gateway
 
 ```bash
-java -XX:-RestrictContended -jar target/veloce-engine-1.0.0-SNAPSHOT.jar \
+java -XX:-RestrictContended -jar target/veloce-engine-1.0.0.jar \
   --synthetic-load \
   --rate=50000 \
   --symbol=AAPL \

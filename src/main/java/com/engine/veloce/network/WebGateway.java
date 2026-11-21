@@ -61,6 +61,7 @@ public final class WebGateway {
         server.createContext("/style.css", new StaticResourceHandler("web/style.css", "text/css"));
         server.createContext("/app.js", new StaticResourceHandler("web/app.js", "application/javascript"));
         server.createContext("/api/snapshot", this::handleSnapshot);
+        server.createContext("/api/version", this::handleVersion);
         server.createContext("/api/order", this::handleOrderSubmission);
         server.createContext("/api/cancel", this::handleOrderCancel);
         server.createContext("/api/events", this::handleSseStream);
@@ -133,6 +134,16 @@ public final class WebGateway {
 
         String response = String.format("{\"status\":\"ACCEPTED\",\"orderId\":%d}", orderId);
         byte[] bytes = response.getBytes(StandardCharsets.UTF_8);
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
+        exchange.sendResponseHeaders(200, bytes.length);
+        try (OutputStream os = exchange.getResponseBody()) {
+            os.write(bytes);
+        }
+    }
+
+    private void handleVersion(HttpExchange exchange) throws IOException {
+        byte[] bytes = "{\"name\":\"veloce-engine\",\"version\":\"1.0.0\"}\n".getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", "application/json");
         exchange.getResponseHeaders().set("Access-Control-Allow-Origin", "*");
         exchange.sendResponseHeaders(200, bytes.length);
